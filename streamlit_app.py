@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import plotly.figure_factory as ff
 
 st.set_page_config(
     page_title="Dash App",
