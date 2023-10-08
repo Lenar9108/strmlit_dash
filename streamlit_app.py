@@ -1,24 +1,46 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
 
-
+st.set_page_config(
+    page_title="Dash App",
+    page_icon="📊",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
 
 df = pd.read_csv('rents_test.csv', sep=',', encoding='utf-8')
+country_list = df['country_name'].unique()
 
 st.header('CarSharing X 🚕')
 
+
 st.write()
 st.write()
-st.write('Ежедневная выручка по регионам')
+
+with st.sidebar:
+
+    options = st.multiselect(
+        'Выберите страну',
+        country_list,
+        country_list[:2])
+
+
+st.subheader('Ежедневная выручка по регионам')
+
 df_revenue = df[['rent_date', 'country_name','rent_cost_per_day']].groupby(['rent_date', 'country_name']).sum().reset_index().copy()
 df_revenue = df_revenue.rename(columns={'rent_date':'Дата', 'country_name':'Страна','rent_cost_per_day':'Дневная выручка'})
 
-options = st.multiselect(
-    'Выберите страну',
-    df_revenue['Страна'].unique(),
-    df_revenue['Страна'].unique()[:5])
+fig = px.line(df_revenue[df_revenue['Страна'].isin(options)], 
+          x="Дата", y="Дневная выручка", color="Страна", line_group="Страна", hover_name="Страна",
+    line_shape="spline", render_mode="svg")
+st.write(fig)
 
-# st.write('Вы укзали:', options)
-df_revenue = df_revenue[df_revenue['Страна'].isin(options)]
+df_users = df[['rent_date', 'rent_id', 'country_name']].groupby(['rent_date', 'country_name']).count().reset_index().copy()
+df_users = df_users.rename(columns={'rent_date':'Дата', 'country_name':'Страна', 'rent_id': 'Кол-во пользователей'})
 
-st.line_chart(df_revenue, x="Дата", y="Дневная выручка", color="Страна")
+st.subheader('Кол-во активных пользователей')
+# st.bar_chart(df_users[df_users['Страна'].isin(options)], x='Дата', y='Кол-во пользователей' )
+fig = px.bar(df_users[df_users['Страна'].isin(options)], x="Дата", y="Кол-во пользователей", barmode="group")
+st.write(fig)
+
